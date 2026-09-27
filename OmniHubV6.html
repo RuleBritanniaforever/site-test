@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="en" id="app-html" class="h-full bg-slate-100 text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniHub - Shared Media & Community Vault</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f5ff',
+                            100: '#e0ebff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+        }
+        .dark .glass-nav {
+            background: rgba(15, 23, 42, 0.88);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Collapsed Sidebar styles */
+        .sidebar-collapsed {
+            width: 4.5rem !important;
+        }
+        .sidebar-collapsed .hide-on-collapse {
+            display: none !important;
+        }
+        .sidebar-collapsed .center-on-collapse {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        /* 5-Item scroll limit container for section lists */
+        .max-5-items-scroll {
+            max-height: 195px;
+            overflow-y: auto;
+        }
+
+        /* Collapsible accordion animation */
+        .collapsible-content {
+            transition: max-height 0.25s ease-in-out, opacity 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            pointer-events: none;
+        }
+
+        /* Context Menu Floating Shadow */
+        .context-menu-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col overflow-hidden" onclick="hideContextMenu()">
+
+    <!-- Top Navigation Bar -->
+    <header class="glass-nav sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <!-- Mobile Menu Toggle -->
+            <button id="sidebar-toggle-btn" class="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 focus:outline-none">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+
+            <!-- Desktop Sidebar Collapse Button -->
+            <button id="sidebar-desktop-collapse" onclick="toggleSidebarMinimize()" title="Minimize / Expand Sidebar" class="hidden md:flex p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-indent text-base" id="collapse-icon"></i>
+            </button>
+
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="setActiveSection('all')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+                    <i class="fa-solid fa-cubes-stacked text-white text-lg"></i>
+                </div>
+                <div class="hide-on-collapse">
+                    <h1 class="font-extrabold text-lg tracking-tight leading-none bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-white dark:via-slate-200 dark:to-blue-400 bg-clip-text text-transparent">OmniHub</h1>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-wide">MEDIA VAULT</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="hidden sm:flex items-center flex-1 max-w-md mx-6">
+            <div class="relative w-full">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input id="search-input" type="text" placeholder="Search photos, videos, audio, or tags..." 
+                       class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm">
+            </div>
+        </div>
+
+        <!-- Action Buttons & Theme Switcher -->
+        <div class="flex items-center gap-2">
+            <!-- Theme Toggle Button -->
+            <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all" title="Toggle Light/Dark Theme">
+                <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+            </button>
+
+            <!-- User Auth Container -->
+            <div id="auth-header-container" class="flex items-center gap-2">
+                <!-- Injected via JS based on login state -->
+            </div>
+
+            <button onclick="openNewSectionModal()" class="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-all active:scale-95">
+                <i class="fa-solid fa-folder-plus text-blue-500"></i>
+                <span>New Section</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- Mobile Drawer Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-slate-950/60 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleSidebar(false)"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-72 bg-white dark:bg-slate-900/95 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 transform -translate-x-full md:translate-x-0 shrink-0">
+            
+            <div class="p-4 flex-1 overflow-y-auto space-y-4">
+
+                <!-- Primary Sidebar Upload Button -->
+                <div>
+                    <button onclick="openUploadModal()" class="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/25 transition-all active:scale-95">
+                        <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+                        <span class="hide-on-collapse">Upload File</span>
+                    </button>
+                </div>
+
+                <!-- 1. Main View Section -->
+                <div class="sidebar-group">
+                    <div onclick="toggleSidebarGroup('group-main')" class="flex items-center justify-between px-3 py-1 cursor-pointer select-none group">
+                        <span class="hide-on-collapse text-[11px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Main View</span>
+                        <i id="group-main-icon" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse"></i>
+                    </div>
+                    <nav id="group-main-content" class="collapsible-content mt-1 space-y-1">
+                        <button onclick="setActiveSection('all')" id="nav-all" class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all group active">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-border-all text-blue-500 w-4 text-center"></i>
+                                <span class="hide-on-collapse">All Media</span>
+                            </div>
+                            <span id="badge-all-count" class="hide-on-collapse text-[10px] bg-slate-200 dark:bg-slate-800 group-hover:bg-slate-300 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold">0</span>
+                        </button>
+                        <button onclick="setMyMediaView()" id="nav-my-media" class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-user-gear text-purple-500 w-4 text-center"></i>
+                                <span class="hide-on-collapse">My Uploads</span>
+                            </div>
+                            <span id="badge-my-count" class="hide-on-collapse text-[10px] bg-slate-200 dark:bg-slate-800 group-hover:bg-slate-300 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold">0</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- 2. Filter Format Section -->
+                <div class="sidebar-group">
+                    <div onclick="toggleSidebarGroup('group-filter')" class="flex items-center justify-between px-3 py-1 cursor-pointer select-none group">
+                        <span class="hide-on-collapse text-[11px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase">Filter Format</span>
+                        <i id="group-filter-icon" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse"></i>
+                    </div>
+                    <nav id="group-filter-content" class="collapsible-content mt-1 space-y-1">
+                        <button onclick="setMediaTypeFilter('all')" id="filter-type-all" class="type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 dark:text-white bg-slate-200 dark:bg-slate-800 transition-all" title="All Formats">
+                            <i class="fa-solid fa-icons text-slate-500 w-4 text-center"></i>
+                            <span class="hide-on-collapse">All Formats</span>
+                        </button>
+                        <button onclick="setMediaTypeFilter('photo')" id="filter-type-photo" class="type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all" title="Photos">
+                            <i class="fa-solid fa-image text-emerald-500 w-4 text-center"></i>
+                            <span class="hide-on-collapse">Photos</span>
+                        </button>
+                        <button onclick="setMediaTypeFilter('video')" id="filter-type-video" class="type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all" title="Videos">
+                            <i class="fa-solid fa-film text-purple-500 w-4 text-center"></i>
+                            <span class="hide-on-collapse">Videos</span>
+                        </button>
+                        <button onclick="setMediaTypeFilter('audio')" id="filter-type-audio" class="type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all" title="Audio">
+                            <i class="fa-solid fa-headphones text-amber-500 w-4 text-center"></i>
+                            <span class="hide-on-collapse">Audio Tracks</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- 3. Pinned Sections & Media -->
+                <div class="sidebar-group border-t border-slate-200/60 dark:border-slate-800/60 pt-3">
+                    <div onclick="toggleSidebarGroup('group-pinned')" class="flex items-center justify-between px-3 py-1 cursor-pointer select-none group">
+                        <span class="hide-on-collapse text-[11px] font-extrabold tracking-wider text-amber-600 dark:text-amber-400 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-thumbtack text-[10px]"></i> Pinned Items
+                        </span>
+                        <i id="group-pinned-icon" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse"></i>
+                    </div>
+                    <div id="group-pinned-content" class="collapsible-content mt-1 space-y-1">
+                        <div id="pinned-items-container" class="space-y-1">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Community Sections List -->
+                <div class="sidebar-group border-t border-slate-200/60 dark:border-slate-800/60 pt-3">
+                    <div onclick="toggleSidebarGroup('group-community')" class="flex items-center justify-between px-3 py-1 cursor-pointer select-none group">
+                        <div class="hide-on-collapse text-[11px] font-extrabold tracking-wider text-emerald-600 dark:text-emerald-400 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-[10px]"></i>
+                            <span>Community Sections</span>
+                        </div>
+                        <i id="group-community-icon" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse"></i>
+                    </div>
+                    <div id="group-community-content" class="collapsible-content mt-1">
+                        <div id="community-sections-container" class="space-y-1 max-5-items-scroll pr-1">
+                            <!-- Dynamic rendering -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. User Sections List -->
+                <div class="sidebar-group border-t border-slate-200/60 dark:border-slate-800/60 pt-3">
+                    <div onclick="toggleSidebarGroup('group-static')" class="flex items-center justify-between px-3 py-1 cursor-pointer select-none group">
+                        <div class="hide-on-collapse text-[11px] font-extrabold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-user text-[10px]"></i>
+                            <span>User Sections</span>
+                        </div>
+                        <i id="group-static-icon" class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse"></i>
+                    </div>
+                    <div id="group-static-content" class="collapsible-content mt-1">
+                        <div id="static-sections-container" class="space-y-1 max-5-items-scroll pr-1">
+                            <!-- Dynamic rendering -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="p-3 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/50 hide-on-collapse">
+                <div class="glass-card p-2.5 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Vault Synced</span>
+                    </div>
+                    <i class="fa-solid fa-shield-halved text-xs text-blue-500"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Media Feed View -->
+        <main class="flex-1 overflow-y-auto h-full bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 lg:p-8 flex flex-col">
+            
+            <!-- Section Hero / Header Banner -->
+            <div id="section-hero" class="mb-6 p-6 rounded-2xl glass-card relative overflow-hidden bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-purple-500/10 border border-slate-200 dark:border-slate-800">
+                <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span id="hero-badge" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                                <i class="fa-solid fa-globe mr-1"></i> Public Library
+                            </span>
+                            <span id="hero-type-badge" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                                Community Driven
+                            </span>
+                        </div>
+                        <h2 id="hero-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">All Community Files</h2>
+                        <p id="hero-description" class="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl">
+                            Explore photos, audio tracks, and video clips across community sections or custom restricted sections.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toolbar & Sorting -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200 dark:border-slate-800/80">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500">Filter:</span>
+                    <span id="current-filter-label" class="text-xs font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                        All Items
+                    </span>
+                    <span id="file-count-indicator" class="text-xs font-semibold text-slate-500 bg-slate-200/60 dark:bg-slate-900/60 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800/60">
+                        0 Files
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <select id="sort-select" onchange="applySortingAndFiltering()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 shadow-sm">
+                        <option value="likes" selected>Sort by: Most Liked Files</option>
+                        <option value="top_sections">Sort by: Top Sections (Most Files & Hearts)</option>
+                        <option value="newest">Sort by: Newest First</option>
+                        <option value="oldest">Sort by: Oldest First</option>
+                        <option value="title">Sort by: Name (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Sections Quick Browse Bar -->
+            <div id="sections-browse-container" class="mb-6 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire text-amber-500"></i> Top Rated & Popular Sections
+                    </span>
+                    <span class="text-[10px] text-slate-400">Ranked by files & hearts</span>
+                </div>
+                <div id="sections-quick-pills" class="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- User's Created Sections View (Displayed in 'My Uploads' mode) -->
+            <div id="my-sections-management-container" class="mb-6 hidden">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-sm cursor-pointer select-none" onclick="toggleMySectionsCollapse()">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-folder-gear text-purple-500 text-sm"></i>
+                        <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">My Created Sections</span>
+                        <span id="my-sections-count-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">0</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="event.stopPropagation(); openNewSectionModal()" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> New
+                        </button>
+                        <button id="my-sections-collapse-btn" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-transform">
+                            <i id="my-sections-collapse-icon" class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="my-sections-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3 transition-all duration-300">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- My Uploaded Media Section Header -->
+            <div id="my-media-header-container" class="mb-4 hidden">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-sm cursor-pointer select-none" onclick="toggleMyMediaCollapse()">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-photo-film text-blue-500 text-sm"></i>
+                        <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">My Uploaded Media</span>
+                        <span id="my-media-count-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">0</span>
+                    </div>
+                    <button id="my-media-collapse-btn" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-transform">
+                        <i id="my-media-collapse-icon" class="fa-solid fa-chevron-down text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Media Grid Container -->
+            <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-1">
+                <!-- Media Cards will be rendered dynamically -->
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="empty-state" class="hidden flex-1 flex flex-col items-center justify-center p-12 text-center my-12">
+                <div class="w-20 h-20 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl mb-4 shadow-sm">
+                    <i class="fa-solid fa-photo-film"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">No media files found</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-6">There are no files matching your selected section or filter. Upload the first one!</p>
+                <button onclick="openUploadModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload First File</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- FLOATING CONTEXT MENU -->
+    <div id="context-menu" class="fixed z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl context-menu-shadow py-1.5 w-48 hidden text-xs font-semibold text-slate-700 dark:text-slate-200">
+        <div id="context-menu-title" class="px-3 py-1 text-[10px] text-slate-400 font-extrabold uppercase border-b border-slate-100 dark:border-slate-800 mb-1 truncate">
+            Item Options
+        </div>
+        <div id="context-menu-actions" class="space-y-0.5">
+            <!-- Dynamic Actions Injected Here -->
+        </div>
+    </div>
+
+    <!-- UPLOAD FILE MODAL (Enforces 120MB Size Limit) -->
+    <div id="upload-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">Upload Media File</h3>
+                </div>
+                <button onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="upload-form" onsubmit="handleFileUpload(event)" class="p-6 space-y-4 overflow-y-auto">
+                <!-- Dropzone / File Picker -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select File (Photo, Video, or Audio - Max 120MB)</label>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50 dark:bg-slate-950/50 rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center group" onclick="document.getElementById('file-input').click()">
+                        <input id="file-input" type="file" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelect(event)">
+                        
+                        <div class="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-800 group-hover:bg-blue-600/20 text-slate-500 dark:text-slate-400 group-hover:text-blue-500 flex items-center justify-center text-xl mb-3 transition-colors">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Click to browse or drop file here</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Supports PNG, JPG, MP4, WEBM, MP3, WAV (Strict Max: 120 Megabytes)</p>
+                    </div>
+
+                    <!-- File Selected Preview Badge -->
+                    <div id="file-preview-info" class="hidden mt-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <i id="preview-type-icon" class="fa-solid fa-file text-blue-500 text-lg shrink-0"></i>
+                            <div class="truncate">
+                                <p id="preview-filename" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">filename.mp4</p>
+                                <p id="preview-filesize" class="text-[10px] text-slate-500">2.4 MB</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="resetFileSelect()" class="text-xs text-rose-500 hover:text-rose-600 p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Or URL Fallback -->
+                <div>
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                        <span class="flex-shrink mx-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Or insert media URL</span>
+                        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    <input id="media-url-input" type="url" placeholder="https://example.com/media.mp4 or image link" oninput="autoDetectUrlType(this.value)"
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 mt-1">
+                </div>
+
+                <!-- Media Details -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Title *</label>
+                        <input id="upload-title" type="text" required placeholder="Give your file a clear title..." 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Media Format</label>
+                            <select id="upload-type" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none">
+                                <option value="photo">Photo / Image</option>
+                                <option value="video">Video Clip</option>
+                                <option value="audio">Audio Track</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tags (Comma separated)</label>
+                            <input id="upload-tags" type="text" placeholder="nature, music, tutorial, design" 
+                                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Target Section(s) * 
+                            <span class="text-[10px] text-slate-400 font-normal block sm:inline">(Community sections or your owned user sections only)</span>
+                        </label>
+                        <div id="upload-sections-checkboxes" class="max-h-36 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeUploadModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-submit-upload" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Upload File</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CREATE & EDIT SECTION MODAL -->
+    <div id="section-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <i class="fa-solid fa-folder-plus text-sm" id="section-modal-icon"></i>
+                    </div>
+                    <h3 id="section-modal-title" class="font-bold text-slate-900 dark:text-slate-100 text-base">Create New Section</h3>
+                </div>
+                <button onclick="closeNewSectionModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="section-form" onsubmit="handleSectionCreateOrUpdate(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editing-section-id" value="">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Section Name *</label>
+                    <input id="section-title" type="text" required placeholder="e.g. Ambient Chill Tracks, Gaming Clips..." 
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                    <textarea id="section-desc" rows="2" placeholder="Describe what kind of files belong here..." 
+                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Section Type & Access Control *</label>
+                    
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="relative flex items-start p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 hover:border-emerald-500/50 cursor-pointer">
+                            <input type="radio" name="section-type" value="community" checked class="mt-0.5 text-emerald-500 focus:ring-0">
+                            <div class="ml-3">
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-users text-emerald-500"></i> Community Section
+                                </span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Open for everyone: anyone can view and upload files into this section.</span>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-start p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 hover:border-amber-500/50 cursor-pointer">
+                            <input type="radio" name="section-type" value="static" class="mt-0.5 text-amber-500 focus:ring-0">
+                            <div class="ml-3">
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-folder-user text-amber-500"></i> User Section
+                                </span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Personal section. Only accessible/editable by you, but viewable by other users.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Color Theme Accent</label>
+                    <div class="flex items-center gap-3">
+                        <input id="section-color" type="color" value="#3b82f6" class="w-10 h-10 rounded-lg bg-transparent border-0 cursor-pointer">
+                        <span class="text-xs text-slate-500">Pick a badge accent color</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeNewSectionModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                        Cancel
+                    </button>
+                    <button type="submit" id="section-submit-btn" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Save Section</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER AUTH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/50">
+                <div class="flex items-center gap-2">
+                    <button id="auth-tab-login" onclick="switchAuthTab('login')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition-all">
+                        Log In
+                    </button>
+                    <button id="auth-tab-signup" onclick="switchAuthTab('signup')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all">
+                        Sign Up
+                    </button>
+                </div>
+                <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Username *</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input id="auth-username" type="text" required placeholder="e.g. alex99" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password *</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input id="auth-password" type="password" required placeholder="Enter your password..." 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="togglePasswordShow()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                            <i id="password-toggle-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <input id="chk-show-pass" type="checkbox" onchange="togglePasswordShow(this.checked)" class="rounded text-blue-600 focus:ring-0">
+                    <label for="chk-show-pass" class="text-xs text-slate-600 dark:text-slate-400 select-none">Show password</label>
+                </div>
+
+                <button type="submit" id="btn-auth-submit" class="w-full py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25 transition-all mt-2">
+                    Log In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX / MEDIA VIEW MODAL WITH LIVE HEART SELECTION -->
+    <div id="media-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-lg hidden p-4 sm:p-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/50">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <span id="modal-type-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                        Photo
+                    </span>
+                    <h3 id="modal-title" class="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate">Media Title</h3>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Prominent Direct Download Button -->
+                    <button id="modal-direct-download-btn" onclick="triggerCurrentMediaDownload()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 shadow-md transition-all active:scale-95" title="Download original file">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download</span>
+                    </button>
+
+                    <button onclick="closeMediaModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Media Preview Screen -->
+            <div id="modal-player-container" class="bg-slate-950 flex items-center justify-center min-h-[280px] max-h-[50vh] p-4 relative overflow-hidden">
+                <!-- Media injected dynamically -->
+            </div>
+
+            <!-- Details & Controls -->
+            <div class="p-6 bg-white dark:bg-slate-900 overflow-y-auto space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-300 dark:border-slate-700">
+                            <i class="fa-solid fa-user text-slate-400"></i>
+                        </div>
+                        <div>
+                            <p id="modal-uploader" class="text-xs font-bold text-slate-800 dark:text-slate-200">Uploaded by Anonymous</p>
+                            <p id="modal-date" class="text-[10px] text-slate-400">2 hours ago</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactions & Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Red Heart Live Toggle Button -->
+                        <button id="modal-like-btn" onclick="toggleLikeCurrentMedia()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all">
+                            <i id="modal-like-icon" class="fa-solid fa-heart text-slate-400"></i>
+                            <span id="modal-like-count">0</span>
+                        </button>
+
+                        <button id="modal-pin-btn" onclick="togglePinCurrentMedia()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                            <i id="modal-pin-icon" class="fa-solid fa-thumbtack"></i>
+                            <span id="modal-pin-label">Pin Item</span>
+                        </button>
+
+                        <button id="modal-organize-btn" onclick="openReorganizeSelect()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-folder-tree text-blue-500"></i>
+                            <span>Edit Sections</span>
+                        </button>
+
+                        <!-- Copy to My Section -->
+                        <button id="modal-copy-btn" onclick="openCopyModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>Copy to Section</span>
+                        </button>
+
+                        <button id="modal-delete-btn" onclick="confirmDeleteCurrentMedia()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Section Copy Protection Notice -->
+                <div id="copy-disabled-notice" class="hidden p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-amber-500"></i>
+                    <span>This media is accessed directly from or solely belongs to a <strong>User Section</strong>. Copying is restricted unless accessed within a Community Section context. Downloading is allowed.</span>
+                </div>
+
+                <!-- Section Selector inline dropdown -->
+                <div id="reorganize-panel" class="hidden p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Assign to Section(s):</span>
+                    <div id="modal-sections-checkboxes" class="max-h-36 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
+                        <!-- Dynamic checkboxes -->
+                    </div>
+                    <button onclick="confirmSectionMove()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl">
+                        Save Sections
+                    </button>
+                </div>
+
+                <!-- Tags list -->
+                <div id="modal-tags" class="flex flex-wrap gap-1.5">
+                    <!-- Dynamic tags -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- COPY FILE MODAL -->
+    <div id="copy-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <i class="fa-solid fa-copy text-sm"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">Copy Item to Section</h3>
+                </div>
+                <button onclick="closeCopyModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleCopySubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">New Item Title *</label>
+                    <input id="copy-item-title" type="text" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="p-3 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+                    <i class="fa-solid fa-award text-amber-500 mr-1.5"></i> Credit will automatically be preserved for original creator: <strong id="copy-original-credit-name" class="text-slate-900 dark:text-white"></strong>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target Section(s) *</label>
+                    <div id="copy-sections-checkboxes" class="max-h-36 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
+                        <!-- Dynamic checkboxes -->
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeCopyModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25 flex items-center gap-2">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy Item</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // APP GLOBAL STATE
+        window.appState = {
+            appId: typeof __app_id !== 'undefined' ? __app_id : 'omnihub-shared-vault',
+            db: null,
+            auth: null,
+            currentUser: null,
+            loggedInUser: JSON.parse(sessionStorage.getItem('omnihub_user') || 'null'),
+            authMode: 'login',
+            showOnlyMyMedia: false,
+            sections: [],
+            files: [],
+            registeredUsers: [],
+            pinnedIds: JSON.parse(localStorage.getItem('omnihub_pinned') || '{"sections":[],"files":[]}'),
+            activeSectionId: 'all',
+            mediaTypeFilter: 'all',
+            searchQuery: '',
+            sortOrder: 'likes',
+            selectedFileObj: null,
+            currentViewingMediaId: null,
+            theme: 'light',
+            sidebarCollapsed: false,
+            collapsedSidebarGroups: {},
+            mySectionsCollapsed: false,
+            myMediaCollapsed: false
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        window.appState.db = db;
+        window.appState.auth = auth;
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.warn("Auth fallback to anonymous", err);
+                try { await signInAnonymously(auth); } catch(e) {}
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.appState.currentUser = user;
+                subscribeToCollections();
+            }
+        });
+
+        initAuth();
+
+        function subscribeToCollections() {
+            const appId = window.appState.appId;
+
+            // Users Collection
+            const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+            onSnapshot(usersRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach((docSnap) => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                window.appState.registeredUsers = list;
+            }, (err) => console.error("Users snapshot error", err));
+
+            // Sections Collection
+            const sectionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'sections');
+            onSnapshot(sectionsRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach((docSnap) => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                
+                window.appState.sections = list;
+                renderSectionsNav();
+                renderPinnedItems();
+                updateUploadSectionOptions();
+                renderMediaGrid();
+            }, (err) => console.error("Sections snapshot error", err));
+
+            // Files Collection
+            const filesRef = collection(db, 'artifacts', appId, 'public', 'data', 'files');
+            onSnapshot(filesRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach((docSnap) => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                window.appState.files = list;
+                renderSectionsNav();
+                renderPinnedItems();
+                renderMediaGrid();
+                updateBadgeCounts();
+
+                // If currently viewing a media item in lightbox modal, update its view live!
+                if (window.appState.currentViewingMediaId) {
+                    updateModalLikeButton();
+                }
+            }, (err) => console.error("Files snapshot error", err));
+        }
+
+        window.registerUserAccount = async function(username, password) {
+            const appId = window.appState.appId;
+            const ref = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+            const docRef = await addDoc(ref, {
+                username: username,
+                password: password,
+                createdAt: Date.now()
+            });
+            return { id: docRef.id, username, password };
+        };
+
+        window.saveSectionToDb = async function(sectionData) {
+            const appId = window.appState.appId;
+            const ref = collection(db, 'artifacts', appId, 'public', 'data', 'sections');
+            await addDoc(ref, sectionData);
+        };
+
+        window.updateSectionInDb = async function(sectionId, updateObj) {
+            const appId = window.appState.appId;
+            const secRef = doc(db, 'artifacts', appId, 'public', 'data', 'sections', sectionId);
+            await updateDoc(secRef, updateObj);
+        };
+
+        window.deleteSectionFromDb = async function(sectionId) {
+            const appId = window.appState.appId;
+            const secRef = doc(db, 'artifacts', appId, 'public', 'data', 'sections', sectionId);
+            await deleteDoc(secRef);
+        };
+
+        window.saveFileToDb = async function(fileData) {
+            const appId = window.appState.appId;
+            const ref = collection(db, 'artifacts', appId, 'public', 'data', 'files');
+            await addDoc(ref, fileData);
+        };
+
+        window.updateFileInDb = async function(fileId, updateObj) {
+            const appId = window.appState.appId;
+            const fileRef = doc(db, 'artifacts', appId, 'public', 'data', 'files', fileId);
+            await updateDoc(fileRef, updateObj);
+        };
+
+        window.deleteFileFromDb = async function(fileId) {
+            const appId = window.appState.appId;
+            const fileRef = doc(db, 'artifacts', appId, 'public', 'data', 'files', fileId);
+            await deleteDoc(fileRef);
+        };
+    </script>
+
+    <script>
+        // STRICT 120 MEGABYTES MAXIMUM FILE SIZE CONSTANT
+        const MAX_FILE_SIZE_BYTES = 120 * 1024 * 1024; // 120 MB in bytes
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            renderSectionsNav();
+            renderPinnedItems();
+            renderAuthHeader();
+            applyTheme();
+            setupDropZone();
+        });
+
+        function getUserIdentifier() {
+            if (window.appState.loggedInUser && window.appState.loggedInUser.username) {
+                return window.appState.loggedInUser.username;
+            }
+            if (window.appState.currentUser && window.appState.currentUser.uid) {
+                return 'anon_' + window.appState.currentUser.uid;
+            }
+            let guestId = localStorage.getItem('omnihub_guest_id');
+            if (!guestId) {
+                guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem('omnihub_guest_id', guestId);
+            }
+            return guestId;
+        }
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const colors = {
+                success: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-200',
+                error: 'border-rose-500 bg-rose-50 dark:bg-rose-950/90 text-rose-800 dark:text-rose-200',
+                info: 'border-blue-500 bg-blue-50 dark:bg-blue-950/90 text-blue-800 dark:text-blue-200'
+            };
+
+            const icons = {
+                success: 'fa-circle-check text-emerald-500',
+                error: 'fa-circle-xmark text-rose-500',
+                info: 'fa-circle-info text-blue-500'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `p-3.5 rounded-xl border shadow-lg max-w-sm flex items-start gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icons[type] || icons.info} text-lg shrink-0 mt-0.5"></i>
+                <div class="flex-1">
+                    <h4 class="font-bold text-xs">${escapeHtml(title)}</h4>
+                    <p class="text-[11px] opacity-90 mt-0.5">${escapeHtml(message)}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function toggleSidebarGroup(groupId) {
+            const content = document.getElementById(`${groupId}-content`);
+            const icon = document.getElementById(`${groupId}-icon`);
+            if (!content) return;
+
+            const isCollapsed = content.classList.contains('collapsed');
+            if (isCollapsed) {
+                content.classList.remove('collapsed');
+                if (icon) icon.className = "fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse";
+                window.appState.collapsedSidebarGroups[groupId] = false;
+            } else {
+                content.classList.add('collapsed');
+                if (icon) icon.className = "fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hide-on-collapse";
+                window.appState.collapsedSidebarGroups[groupId] = true;
+            }
+        }
+
+        function toggleMySectionsCollapse() {
+            window.appState.mySectionsCollapsed = !window.appState.mySectionsCollapsed;
+            const grid = document.getElementById('my-sections-grid');
+            const icon = document.getElementById('my-sections-collapse-icon');
+            if (grid) {
+                if (window.appState.mySectionsCollapsed) {
+                    grid.classList.add('hidden');
+                    if (icon) icon.className = "fa-solid fa-chevron-right text-xs";
+                } else {
+                    grid.classList.remove('hidden');
+                    if (icon) icon.className = "fa-solid fa-chevron-down text-xs";
+                }
+            }
+        }
+
+        function toggleMyMediaCollapse() {
+            window.appState.myMediaCollapsed = !window.appState.myMediaCollapsed;
+            const grid = document.getElementById('media-grid');
+            const icon = document.getElementById('my-media-collapse-icon');
+            if (grid) {
+                if (window.appState.myMediaCollapsed) {
+                    grid.classList.add('hidden');
+                    if (icon) icon.className = "fa-solid fa-chevron-right text-xs";
+                } else {
+                    grid.classList.remove('hidden');
+                    if (icon) icon.className = "fa-solid fa-chevron-down text-xs";
+                }
+            }
+        }
+
+        function toggleSidebarMinimize() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('collapse-icon');
+            if (!sidebar) return;
+
+            window.appState.sidebarCollapsed = !window.appState.sidebarCollapsed;
+            if (window.appState.sidebarCollapsed) {
+                sidebar.classList.add('sidebar-collapsed');
+                if (icon) icon.className = "fa-solid fa-outdent text-base";
+            } else {
+                sidebar.classList.remove('sidebar-collapsed');
+                if (icon) icon.className = "fa-solid fa-indent text-base";
+            }
+        }
+
+        function toggleSidebar(show) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (!sidebar || !overlay) return;
+
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function savePinnedToLocalStorage() {
+            localStorage.setItem('omnihub_pinned', JSON.stringify(window.appState.pinnedIds));
+        }
+
+        function togglePinSection(secId) {
+            const pinned = window.appState.pinnedIds.sections;
+            const index = pinned.indexOf(secId);
+            if (index > -1) {
+                pinned.splice(index, 1);
+                showToast("Unpinned", "Section removed from pinned items.", "info");
+            } else {
+                pinned.push(secId);
+                showToast("Pinned", "Section added to pinned items!", "success");
+            }
+            savePinnedToLocalStorage();
+            renderSectionsNav();
+            renderPinnedItems();
+        }
+
+        function togglePinFile(fileId) {
+            const pinned = window.appState.pinnedIds.files;
+            const index = pinned.indexOf(fileId);
+            if (index > -1) {
+                pinned.splice(index, 1);
+                showToast("Unpinned", "Media file removed from pinned items.", "info");
+            } else {
+                pinned.push(fileId);
+                showToast("Pinned", "Media file added to pinned items!", "success");
+            }
+            savePinnedToLocalStorage();
+            renderPinnedItems();
+            updateModalPinButtonState();
+        }
+
+        function renderPinnedItems() {
+            const container = document.getElementById('pinned-items-container');
+            if (!container) return;
+
+            const pinnedSecIds = window.appState.pinnedIds.sections || [];
+            const pinnedFileIds = window.appState.pinnedIds.files || [];
+
+            const pinnedSections = window.appState.sections.filter(s => pinnedSecIds.includes(s.id));
+            const pinnedFiles = window.appState.files.filter(f => pinnedFileIds.includes(f.id));
+
+            if (pinnedSections.length === 0 && pinnedFiles.length === 0) {
+                container.innerHTML = `
+                    <p class="hide-on-collapse text-[11px] text-slate-400 px-3 py-1 italic">
+                        Right-click any section or media to pin it here.
+                    </p>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            pinnedSections.forEach(sec => {
+                html += `
+                    <div oncontextmenu="handleSectionContextMenu(event, '${sec.id}')" onclick="setActiveSection('${sec.id}')" 
+                         class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 transition-all group cursor-pointer">
+                        <div class="flex items-center gap-2 truncate">
+                            <i class="fa-solid fa-thumbtack text-[10px] text-amber-500 shrink-0"></i>
+                            <span class="truncate hide-on-collapse">${escapeHtml(sec.title)}</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); togglePinSection('${sec.id}')" class="hide-on-collapse text-slate-400 hover:text-rose-500 text-[10px]" title="Unpin">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            pinnedFiles.forEach(file => {
+                const icon = file.type === 'photo' ? 'fa-image text-emerald-500' : (file.type === 'video' ? 'fa-film text-purple-500' : 'fa-headphones text-amber-500');
+                html += `
+                    <div oncontextmenu="handleMediaContextMenu(event, '${file.id}')" onclick="openMediaModal('${file.id}')" 
+                         class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 transition-all group cursor-pointer">
+                        <div class="flex items-center gap-2 truncate">
+                            <i class="fa-solid ${icon} text-[10px] shrink-0"></i>
+                            <span class="truncate hide-on-collapse">${escapeHtml(file.title)}</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); togglePinFile('${file.id}')" class="hide-on-collapse text-slate-400 hover:text-rose-500 text-[10px]" title="Unpin">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function showContextMenu(x, y, title, actions) {
+            const menu = document.getElementById('context-menu');
+            const menuTitle = document.getElementById('context-menu-title');
+            const menuActions = document.getElementById('context-menu-actions');
+
+            menuTitle.innerText = title;
+            menuActions.innerHTML = actions.map(act => `
+                <button onclick="${act.handler}" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors ${act.danger ? 'text-rose-500 hover:text-rose-600' : ''}">
+                    <i class="${act.icon} text-xs w-4 text-center"></i>
+                    <span>${act.label}</span>
+                </button>
+            `).join('');
+
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
+            let posX = x;
+            let posY = y;
+
+            if (x + 200 > winWidth) posX = winWidth - 210;
+            if (y + 220 > winHeight) posY = winHeight - 230;
+
+            menu.style.left = `${posX}px`;
+            menu.style.top = `${posY}px`;
+            menu.classList.remove('hidden');
+        }
+
+        function hideContextMenu() {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.classList.add('hidden');
+        }
+
+        function canCopyMedia(file) {
+            if (!file) return false;
+            
+            const sIds = file.sectionIds || (file.sectionId ? [file.sectionId] : []);
+            const parentCommunitySecs = window.appState.sections.filter(s => sIds.includes(s.id) && s.type === 'community');
+            
+            if (parentCommunitySecs.length === 0) return false;
+
+            const activeSec = window.appState.sections.find(s => s.id === window.appState.activeSectionId);
+            if (activeSec && activeSec.type === 'static') {
+                return false;
+            }
+
+            return true;
+        }
+
+        function handleSectionContextMenu(e, secId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const sec = window.appState.sections.find(s => s.id === secId);
+            if (!sec) return;
+
+            const currentUser = window.appState.loggedInUser?.username;
+            const isOwner = currentUser && sec.creator === currentUser;
+            const isPinned = (window.appState.pinnedIds.sections || []).includes(secId);
+
+            const actions = [
+                {
+                    label: isPinned ? "Unpin Section" : "Pin Section",
+                    icon: "fa-solid fa-thumbtack text-amber-500",
+                    handler: `togglePinSection('${sec.id}'); hideContextMenu();`
+                },
+                {
+                    label: "View Section",
+                    icon: "fa-solid fa-folder-open text-blue-500",
+                    handler: `setActiveSection('${sec.id}'); hideContextMenu();`
+                }
+            ];
+
+            if (isOwner) {
+                actions.push({
+                    label: "Edit Section",
+                    icon: "fa-solid fa-pen-to-square text-emerald-500",
+                    handler: `openEditSectionModal('${sec.id}'); hideContextMenu();`
+                });
+                actions.push({
+                    label: "Delete Section",
+                    icon: "fa-solid fa-trash text-rose-500",
+                    danger: true,
+                    handler: `confirmDeleteSection('${sec.id}'); hideContextMenu();`
+                });
+            }
+
+            showContextMenu(e.clientX, e.clientY, sec.title, actions);
+        }
+
+        function handleMediaContextMenu(e, fileId) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const isPinned = (window.appState.pinnedIds.files || []).includes(fileId);
+            const allowCopy = canCopyMedia(file);
+
+            const actions = [
+                {
+                    label: "Open Media",
+                    icon: "fa-solid fa-expand text-blue-500",
+                    handler: `openMediaModal('${file.id}'); hideContextMenu();`
+                },
+                {
+                    label: "Download File",
+                    icon: "fa-solid fa-download text-emerald-500",
+                    handler: `downloadMediaFile('${file.url}', '${file.title}'); hideContextMenu();`
+                },
+                {
+                    label: isPinned ? "Unpin File" : "Pin File",
+                    icon: "fa-solid fa-thumbtack text-amber-500",
+                    handler: `togglePinFile('${file.id}'); hideContextMenu();`
+                }
+            ];
+
+            if (allowCopy) {
+                actions.push({
+                    label: "Copy to Section",
+                    icon: "fa-solid fa-copy text-indigo-500",
+                    handler: `openMediaModal('${file.id}'); setTimeout(openCopyModal, 200); hideContextMenu();`
+                });
+            }
+
+            showContextMenu(e.clientX, e.clientY, file.title, actions);
+        }
+
+        function calculateTopSections() {
+            const sections = [...window.appState.sections];
+            const files = window.appState.files;
+
+            sections.forEach(sec => {
+                const secFiles = files.filter(f => {
+                    const sIds = f.sectionIds || (f.sectionId ? [f.sectionId] : []);
+                    return sIds.includes(sec.id);
+                });
+                const totalFiles = secFiles.length;
+                const totalHearts = secFiles.reduce((sum, f) => sum + (f.likes || 0), 0);
+
+                sec.popularityScore = (totalFiles * 10) + totalHearts;
+                sec.totalFiles = totalFiles;
+                sec.totalHearts = totalHearts;
+            });
+
+            sections.sort((a, b) => b.popularityScore - a.popularityScore);
+            return sections;
+        }
+
+        function getSectionFileCount(secId) {
+            return window.appState.files.filter(f => {
+                const sIds = f.sectionIds || (f.sectionId ? [f.sectionId] : []);
+                return sIds.includes(secId);
+            }).length;
+        }
+
+        function renderSectionsNav() {
+            const communityContainer = document.getElementById('community-sections-container');
+            const staticContainer = document.getElementById('static-sections-container');
+
+            if (!communityContainer || !staticContainer) return;
+
+            const communitySecs = window.appState.sections.filter(s => s.type === 'community');
+            const staticSecs = window.appState.sections.filter(s => s.type === 'static');
+
+            const pinnedSecIds = window.appState.pinnedIds.sections || [];
+
+            communityContainer.innerHTML = communitySecs.map(sec => `
+                <div oncontextmenu="handleSectionContextMenu(event, '${sec.id}')" onclick="setActiveSection('${sec.id}')" id="nav-sec-${sec.id}" title="${escapeHtml(sec.title)}" 
+                     class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium ${!window.appState.showOnlyMyMedia && window.appState.activeSectionId === sec.id ? 'bg-blue-500/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-300 border border-blue-500/30' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'} transition-all group cursor-pointer">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${sec.color || '#10b981'}"></span>
+                        <span class="truncate hide-on-collapse">${escapeHtml(sec.title)}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 hide-on-collapse">
+                        ${pinnedSecIds.includes(sec.id) ? '<i class="fa-solid fa-thumbtack text-[9px] text-amber-500"></i>' : ''}
+                        <span class="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                            ${getSectionFileCount(sec.id)}
+                        </span>
+                    </div>
+                </div>
+            `).join('') || '<p class="hide-on-collapse text-[11px] text-slate-400 px-3 py-1 italic">No community sections</p>';
+
+            staticContainer.innerHTML = staticSecs.map(sec => `
+                <div oncontextmenu="handleSectionContextMenu(event, '${sec.id}')" onclick="setActiveSection('${sec.id}')" id="nav-sec-${sec.id}" title="${escapeHtml(sec.title)}" 
+                     class="nav-item center-on-collapse w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium ${!window.appState.showOnlyMyMedia && window.appState.activeSectionId === sec.id ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'} transition-all group cursor-pointer">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fa-solid fa-folder-user text-[10px] text-amber-500 shrink-0"></i>
+                        <span class="truncate hide-on-collapse">${escapeHtml(sec.title)}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 hide-on-collapse">
+                        ${pinnedSecIds.includes(sec.id) ? '<i class="fa-solid fa-thumbtack text-[9px] text-amber-500"></i>' : ''}
+                        <span class="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                            ${getSectionFileCount(sec.id)}
+                        </span>
+                    </div>
+                </div>
+            `).join('') || '<p class="hide-on-collapse text-[11px] text-slate-400 px-3 py-1 italic">No user sections</p>';
+
+            updateActiveNavHighlight();
+        }
+
+        function renderSectionsQuickPills() {
+            const container = document.getElementById('sections-quick-pills');
+            if (!container) return;
+
+            const sortedSecs = calculateTopSections();
+            container.innerHTML = sortedSecs.slice(0, 8).map(sec => `
+                <button onclick="setActiveSection('${sec.id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border flex items-center gap-2 transition-all ${window.appState.activeSectionId === sec.id ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-blue-400'}">
+                    <span class="w-2 h-2 rounded-full" style="background-color: ${sec.color || '#3b82f6'}"></span>
+                    <span>${escapeHtml(sec.title)}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded-full ${window.appState.activeSectionId === sec.id ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
+                        ${sec.totalFiles}
+                    </span>
+                </button>
+            `).join('');
+        }
+
+        function renderMySectionsGrid() {
+            const grid = document.getElementById('my-sections-grid');
+            const countBadge = document.getElementById('my-sections-count-badge');
+            if (!grid) return;
+
+            const currentUser = window.appState.loggedInUser?.username;
+            const mySections = window.appState.sections.filter(s => s.creator === currentUser);
+
+            if (countBadge) countBadge.innerText = mySections.length;
+
+            if (mySections.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-xs text-slate-500">
+                        You haven't created any sections yet. Click <strong>New Section</strong> to start!
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = mySections.map(sec => {
+                const count = getSectionFileCount(sec.id);
+                const isCommunity = sec.type === 'community';
+                return `
+                    <div oncontextmenu="handleSectionContextMenu(event, '${sec.id}')" class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 shadow-sm flex items-center justify-between gap-2 group hover:border-blue-500/50 transition-all">
+                        <div class="flex items-center gap-2.5 truncate cursor-pointer flex-1" onclick="setActiveSection('${sec.id}')">
+                            <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background-color: ${sec.color || '#3b82f6'}20; color: ${sec.color || '#3b82f6'}">
+                                <i class="fa-solid ${isCommunity ? 'fa-users' : 'fa-folder-user'} text-xs"></i>
+                            </div>
+                            <div class="truncate">
+                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${escapeHtml(sec.title)}</h4>
+                                <span class="text-[10px] text-slate-400">${count} files • ${isCommunity ? 'Community' : 'User Section'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="openEditSectionModal('${sec.id}')" class="p-1.5 text-slate-400 hover:text-blue-500 rounded-lg transition-colors" title="Edit Section">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button onclick="confirmDeleteSection('${sec.id}')" class="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors" title="Delete Section">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderAuthHeader() {
+            const container = document.getElementById('auth-header-container');
+            if (!container) return;
+
+            const user = window.appState.loggedInUser;
+
+            if (user) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 bg-slate-200/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700">
+                        <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] uppercase">
+                            ${escapeHtml(user.username.substring(0, 2))}
+                        </div>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[100px] truncate">${escapeHtml(user.username)}</span>
+                        <button onclick="handleLogout()" title="Log Out" class="text-slate-400 hover:text-rose-500 ml-1">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="openAuthModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20 transition-all">
+                        <i class="fa-solid fa-user-lock mr-1.5"></i> Log In
+                    </button>
+                `;
+            }
+        }
+
+        function openAuthModal(mode = 'login') {
+            switchAuthTab(mode);
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('auth-form').reset();
+        }
+
+        function switchAuthTab(mode) {
+            window.appState.authMode = mode;
+            const tabLogin = document.getElementById('auth-tab-login');
+            const tabSignup = document.getElementById('auth-tab-signup');
+            const submitBtn = document.getElementById('btn-auth-submit');
+
+            if (mode === 'login') {
+                tabLogin.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition-all";
+                tabSignup.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all";
+                submitBtn.innerText = "Log In";
+            } else {
+                tabSignup.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition-all";
+                tabLogin.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all";
+                submitBtn.innerText = "Create Account";
+            }
+        }
+
+        function togglePasswordShow(force) {
+            const passInput = document.getElementById('auth-password');
+            const icon = document.getElementById('password-toggle-icon');
+            const chk = document.getElementById('chk-show-pass');
+
+            const isShow = typeof force === 'boolean' ? force : passInput.type === 'password';
+            
+            passInput.type = isShow ? 'text' : 'password';
+            if (chk) chk.checked = isShow;
+            if (icon) icon.className = isShow ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+
+            if (!username || !password) {
+                showToast("Missing Info", "Please enter both username and password.", "error");
+                return;
+            }
+
+            const registered = window.appState.registeredUsers || [];
+
+            if (window.appState.authMode === 'signup') {
+                const existing = registered.find(u => u.username.toLowerCase() === username.toLowerCase());
+                if (existing) {
+                    showToast("Username Taken", "Please pick a different username.", "error");
+                    return;
+                }
+
+                try {
+                    const newUser = await window.registerUserAccount(username, password);
+                    setAccountSession(newUser);
+                    showToast("Account Created", `Welcome, ${username}!`, "success");
+                    closeAuthModal();
+                } catch (err) {
+                    console.error("Signup error", err);
+                    showToast("Error", "Could not create account.", "error");
+                }
+            } else {
+                const user = registered.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+                if (!user) {
+                    showToast("Invalid Credentials", "Incorrect username or password.", "error");
+                    return;
+                }
+
+                setAccountSession(user);
+                showToast("Logged In", `Welcome back, ${user.username}!`, "success");
+                closeAuthModal();
+            }
+        }
+
+        function setAccountSession(user) {
+            window.appState.loggedInUser = user;
+            sessionStorage.setItem('omnihub_user', JSON.stringify(user));
+            renderAuthHeader();
+            renderSectionsNav();
+            renderMediaGrid();
+            updateBadgeCounts();
+        }
+
+        function handleLogout() {
+            window.appState.loggedInUser = null;
+            sessionStorage.removeItem('omnihub_user');
+            window.appState.showOnlyMyMedia = false;
+            renderAuthHeader();
+            renderSectionsNav();
+            renderMediaGrid();
+            updateBadgeCounts();
+            showToast("Logged Out", "You are now in guest view mode.", "info");
+        }
+
+        function setMyMediaView() {
+            if (!window.appState.loggedInUser) {
+                openAuthModal('login');
+                showToast("Login Required", "Please log in to view your uploads.", "info");
+                return;
+            }
+            window.appState.showOnlyMyMedia = true;
+            window.appState.activeSectionId = 'all';
+            updateHeroBanner();
+            renderSectionsNav();
+            renderMediaGrid();
+        }
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    window.appState.searchQuery = e.target.value.toLowerCase();
+                    renderMediaGrid();
+                });
+            }
+
+            document.getElementById('sidebar-toggle-btn').addEventListener('click', () => {
+                toggleSidebar(true);
+            });
+        }
+
+        function setupDropZone() {
+            const dropZone = document.getElementById('drop-zone');
+            if (!dropZone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('border-blue-500', 'bg-blue-50/50'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-blue-500', 'bg-blue-50/50'), false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    processFileObject(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                processFileObject(files[0]);
+            }
+        }
+
+        /* STRICT 120MB FILE SIZE LIMIT CHECK */
+        function processFileObject(file) {
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                showToast("File Size Exceeded", `File size is ${sizeMB} MB. Maximum allowed limit is 120 Megabytes. Upload blocked.`, "error");
+                resetFileSelect();
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            let detectedType = 'photo';
+            if (file.type.startsWith('video/')) detectedType = 'video';
+            else if (file.type.startsWith('audio/')) detectedType = 'audio';
+
+            reader.onload = function(e) {
+                window.appState.selectedFileObj = {
+                    name: file.name,
+                    size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                    type: detectedType,
+                    dataUrl: e.target.result
+                };
+
+                const previewInfo = document.getElementById('file-preview-info');
+                const filenameEl = document.getElementById('preview-filename');
+                const filesizeEl = document.getElementById('preview-filesize');
+                const iconEl = document.getElementById('preview-type-icon');
+                const titleInput = document.getElementById('upload-title');
+                const typeSelect = document.getElementById('upload-type');
+
+                if (previewInfo) previewInfo.classList.remove('hidden');
+                if (filenameEl) filenameEl.innerText = file.name;
+                if (filesizeEl) filesizeEl.innerText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                
+                if (iconEl) {
+                    iconEl.className = detectedType === 'photo' ? 'fa-solid fa-image text-emerald-500 text-lg shrink-0' : (detectedType === 'video' ? 'fa-solid fa-film text-purple-500 text-lg shrink-0' : 'fa-solid fa-headphones text-amber-500 text-lg shrink-0');
+                }
+
+                if (titleInput && !titleInput.value) {
+                    titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+                }
+                if (typeSelect) {
+                    typeSelect.value = detectedType;
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function resetFileSelect() {
+            window.appState.selectedFileObj = null;
+            const fileInput = document.getElementById('file-input');
+            const previewInfo = document.getElementById('file-preview-info');
+            if (fileInput) fileInput.value = '';
+            if (previewInfo) previewInfo.classList.add('hidden');
+        }
+
+        function autoDetectUrlType(url) {
+            if (!url) return;
+            const typeSelect = document.getElementById('upload-type');
+            if (!typeSelect) return;
+
+            const lower = url.toLowerCase();
+            if (lower.match(/\.(mp4|webm|mov|m4v)(\?.*)?$/)) {
+                typeSelect.value = 'video';
+            } else if (lower.match(/\.(mp3|wav|ogg|aac)(\?.*)?$/)) {
+                typeSelect.value = 'audio';
+            } else if (lower.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/)) {
+                typeSelect.value = 'photo';
+            }
+        }
+
+        function updateUploadSectionOptions() {
+            const container = document.getElementById('upload-sections-checkboxes');
+            if (!container) return;
+
+            const currentUser = window.appState.loggedInUser?.username;
+            const availableSecs = window.appState.sections.filter(s => s.type === 'community' || s.creator === currentUser);
+
+            if (availableSecs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 p-1">No accessible sections found.</p>`;
+                return;
+            }
+
+            container.innerHTML = availableSecs.map(sec => `
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer text-xs">
+                    <input type="checkbox" name="upload-section" value="${sec.id}" class="rounded text-blue-600 focus:ring-0" ${sec.id === window.appState.activeSectionId ? 'checked' : ''}>
+                    <span class="w-2 h-2 rounded-full" style="background-color: ${sec.color || '#3b82f6'}"></span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(sec.title)}</span>
+                    <span class="text-[10px] text-slate-400 ml-auto uppercase">${sec.type}</span>
+                </label>
+            `).join('');
+        }
+
+        function openUploadModal() {
+            updateUploadSectionOptions();
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+            document.getElementById('upload-form').reset();
+            resetFileSelect();
+        }
+
+        async function handleFileUpload(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('upload-title').value.trim();
+            const type = document.getElementById('upload-type').value;
+            const tagsInput = document.getElementById('upload-tags').value;
+            const urlInput = document.getElementById('media-url-input').value.trim();
+            
+            const checkboxes = document.querySelectorAll('input[name="upload-section"]:checked');
+            const selectedSectionIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (!title) {
+                showToast("Missing Title", "Please give your media file a title.", "error");
+                return;
+            }
+
+            if (selectedSectionIds.length === 0) {
+                showToast("No Section", "Please select at least one section.", "error");
+                return;
+            }
+
+            let fileUrl = '';
+            if (window.appState.selectedFileObj) {
+                fileUrl = window.appState.selectedFileObj.dataUrl;
+            } else if (urlInput) {
+                fileUrl = urlInput;
+            } else {
+                showToast("No File Provided", "Please upload a file or enter a media URL.", "error");
+                return;
+            }
+
+            const currentUser = window.appState.loggedInUser?.username || "Anonymous";
+            const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+            const newFile = {
+                title: title,
+                type: type,
+                url: fileUrl,
+                sectionIds: selectedSectionIds,
+                tags: tags,
+                uploader: currentUser,
+                creator: currentUser,
+                createdAt: Date.now(),
+                likes: 0,
+                likedBy: []
+            };
+
+            try {
+                await window.saveFileToDb(newFile);
+                showToast("Success!", "Media uploaded successfully.", "success");
+                closeUploadModal();
+            } catch (err) {
+                console.error("Upload error", err);
+                showToast("Error", "Failed to upload file.", "error");
+            }
+        }
+
+        function openNewSectionModal() {
+            document.getElementById('editing-section-id').value = '';
+            document.getElementById('section-modal-title').innerText = "Create New Section";
+            document.getElementById('section-form').reset();
+            document.getElementById('section-modal').classList.remove('hidden');
+        }
+
+        function openEditSectionModal(secId) {
+            const sec = window.appState.sections.find(s => s.id === secId);
+            if (!sec) return;
+
+            document.getElementById('editing-section-id').value = sec.id;
+            document.getElementById('section-modal-title').innerText = "Edit Section";
+            document.getElementById('section-title').value = sec.title;
+            document.getElementById('section-desc').value = sec.description || '';
+            document.getElementById('section-color').value = sec.color || '#3b82f6';
+            
+            const typeRadios = document.querySelectorAll('input[name="section-type"]');
+            typeRadios.forEach(r => {
+                if (r.value === sec.type) r.checked = true;
+            });
+
+            document.getElementById('section-modal').classList.remove('hidden');
+        }
+
+        function closeNewSectionModal() {
+            document.getElementById('section-modal').classList.add('hidden');
+            document.getElementById('section-form').reset();
+        }
+
+        async function handleSectionCreateOrUpdate(e) {
+            e.preventDefault();
+
+            const secId = document.getElementById('editing-section-id').value;
+            const title = document.getElementById('section-title').value.trim();
+            const desc = document.getElementById('section-desc').value.trim();
+            const color = document.getElementById('section-color').value;
+            const type = document.querySelector('input[name="section-type"]:checked').value;
+
+            if (!title) return;
+
+            const currentUser = window.appState.loggedInUser?.username || "Anonymous";
+
+            if (secId) {
+                try {
+                    await window.updateSectionInDb(secId, {
+                        title: title,
+                        description: desc,
+                        color: color,
+                        type: type
+                    });
+                    showToast("Section Updated", "Changes saved successfully.", "success");
+                    closeNewSectionModal();
+                } catch (err) {
+                    showToast("Error", "Could not update section.", "error");
+                }
+            } else {
+                try {
+                    await window.saveSectionToDb({
+                        title: title,
+                        description: desc,
+                        color: color,
+                        type: type,
+                        creator: currentUser,
+                        createdAt: Date.now()
+                    });
+                    showToast("Section Created", `Section "${title}" created successfully!`, "success");
+                    closeNewSectionModal();
+                } catch (err) {
+                    showToast("Error", "Could not create section.", "error");
+                }
+            }
+        }
+
+        async function confirmDeleteSection(secId) {
+            const sec = window.appState.sections.find(s => s.id === secId);
+            if (!sec) return;
+
+            if (confirm(`Are you sure you want to delete section "${sec.title}"?`)) {
+                try {
+                    await window.deleteSectionFromDb(secId);
+                    if (window.appState.activeSectionId === secId) {
+                        setActiveSection('all');
+                    }
+                    showToast("Deleted", "Section removed successfully.", "info");
+                } catch (err) {
+                    showToast("Error", "Could not delete section.", "error");
+                }
+            }
+        }
+
+        function setActiveSection(secId) {
+            window.appState.showOnlyMyMedia = false;
+            window.appState.activeSectionId = secId;
+            updateHeroBanner();
+            renderSectionsNav();
+            renderMediaGrid();
+        }
+
+        function setMediaTypeFilter(type) {
+            window.appState.mediaTypeFilter = type;
+            
+            document.querySelectorAll('.type-filter-btn').forEach(btn => {
+                btn.className = "type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white transition-all";
+            });
+
+            const activeBtn = document.getElementById(`filter-type-${type}`);
+            if (activeBtn) {
+                activeBtn.className = "type-filter-btn center-on-collapse w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold text-slate-800 dark:text-white bg-slate-200 dark:bg-slate-800 transition-all";
+            }
+
+            renderMediaGrid();
+        }
+
+        function updateActiveNavHighlight() {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'bg-blue-500/10'));
+
+            if (window.appState.showOnlyMyMedia) {
+                const navMy = document.getElementById('nav-my-media');
+                if (navMy) navMy.classList.add('active', 'bg-blue-500/10');
+            } else if (window.appState.activeSectionId === 'all') {
+                const navAll = document.getElementById('nav-all');
+                if (navAll) navAll.classList.add('active', 'bg-blue-500/10');
+            }
+        }
+
+        function updateHeroBanner() {
+            const heroTitle = document.getElementById('hero-title');
+            const heroDesc = document.getElementById('hero-description');
+            const heroBadge = document.getElementById('hero-badge');
+            const heroTypeBadge = document.getElementById('hero-type-badge');
+
+            const quickBrowse = document.getElementById('sections-browse-container');
+            const mySectionsMgmt = document.getElementById('my-sections-management-container');
+            const myMediaHeader = document.getElementById('my-media-header-container');
+
+            if (window.appState.showOnlyMyMedia) {
+                heroTitle.innerText = "My Media Vault";
+                heroDesc.innerText = "Manage and view all media files uploaded by you across all sections.";
+                heroBadge.innerHTML = `<i class="fa-solid fa-user-gear mr-1"></i> My Account`;
+                heroTypeBadge.innerHTML = `Personal Gallery`;
+
+                if (quickBrowse) quickBrowse.classList.add('hidden');
+                if (mySectionsMgmt) {
+                    mySectionsMgmt.classList.remove('hidden');
+                    renderMySectionsGrid();
+                }
+                if (myMediaHeader) myMediaHeader.classList.remove('hidden');
+                return;
+            }
+
+            if (mySectionsMgmt) mySectionsMgmt.classList.add('hidden');
+            if (myMediaHeader) myMediaHeader.classList.add('hidden');
+
+            if (window.appState.activeSectionId === 'all') {
+                heroTitle.innerText = "All Community Files";
+                heroDesc.innerText = "Explore photos, audio tracks, and video clips across community sections or custom restricted sections.";
+                heroBadge.innerHTML = `<i class="fa-solid fa-globe mr-1"></i> Public Library`;
+                heroTypeBadge.innerHTML = `Community Driven`;
+                if (quickBrowse) {
+                    quickBrowse.classList.remove('hidden');
+                    renderSectionsQuickPills();
+                }
+            } else {
+                if (quickBrowse) quickBrowse.classList.add('hidden');
+                const sec = window.appState.sections.find(s => s.id === window.appState.activeSectionId);
+                if (sec) {
+                    heroTitle.innerText = sec.title;
+                    heroDesc.innerText = sec.description || "Browsing files in this section.";
+                    
+                    if (sec.type === 'community') {
+                        heroBadge.innerHTML = `<i class="fa-solid fa-users mr-1"></i> Community Section`;
+                        heroTypeBadge.innerHTML = `Open Access`;
+                    } else {
+                        heroBadge.innerHTML = `<i class="fa-solid fa-folder-user mr-1"></i> User Section`;
+                        heroTypeBadge.innerHTML = `Owner: ${escapeHtml(sec.creator)}`;
+                    }
+                }
+            }
+        }
+
+        function updateBadgeCounts() {
+            const allBadge = document.getElementById('badge-all-count');
+            const myBadge = document.getElementById('badge-my-count');
+            const myMediaBadge = document.getElementById('my-media-count-badge');
+
+            const totalCount = window.appState.files.length;
+            const currentUser = window.appState.loggedInUser?.username;
+            const myCount = currentUser ? window.appState.files.filter(f => f.uploader === currentUser).length : 0;
+
+            if (allBadge) allBadge.innerText = totalCount;
+            if (myBadge) myBadge.innerText = myCount;
+            if (myMediaBadge) myMediaBadge.innerText = myCount;
+        }
+
+        function applySortingAndFiltering() {
+            const select = document.getElementById('sort-select');
+            if (select) window.appState.sortOrder = select.value;
+            renderMediaGrid();
+        }
+
+        function renderMediaGrid() {
+            const grid = document.getElementById('media-grid');
+            const emptyState = document.getElementById('empty-state');
+            const filterLabel = document.getElementById('current-filter-label');
+            const fileCountInd = document.getElementById('file-count-indicator');
+
+            if (!grid) return;
+
+            let filtered = [...window.appState.files];
+            const currentUser = window.appState.loggedInUser?.username;
+
+            if (window.appState.showOnlyMyMedia) {
+                filtered = filtered.filter(f => f.uploader === currentUser);
+            } else if (window.appState.activeSectionId !== 'all') {
+                filtered = filtered.filter(f => {
+                    const sIds = f.sectionIds || (f.sectionId ? [f.sectionId] : []);
+                    return sIds.includes(window.appState.activeSectionId);
+                });
+            }
+
+            if (window.appState.mediaTypeFilter !== 'all') {
+                filtered = filtered.filter(f => f.type === window.appState.mediaTypeFilter);
+            }
+
+            if (window.appState.searchQuery) {
+                const q = window.appState.searchQuery;
+                filtered = filtered.filter(f => {
+                    const matchTitle = f.title.toLowerCase().includes(q);
+                    const matchUploader = f.uploader?.toLowerCase().includes(q);
+                    const matchTags = f.tags?.some(t => t.toLowerCase().includes(q));
+                    return matchTitle || matchUploader || matchTags;
+                });
+            }
+
+            // Apply Sorting
+            const sort = window.appState.sortOrder;
+            if (sort === 'likes') {
+                filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            } else if (sort === 'newest') {
+                filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            } else if (sort === 'oldest') {
+                filtered.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            } else if (sort === 'title') {
+                filtered.sort((a, b) => a.title.localeCompare(b.title));
+            }
+
+            if (filterLabel) {
+                if (window.appState.showOnlyMyMedia) filterLabel.innerText = "My Uploads";
+                else if (window.appState.activeSectionId === 'all') filterLabel.innerText = "All Media";
+                else {
+                    const sec = window.appState.sections.find(s => s.id === window.appState.activeSectionId);
+                    filterLabel.innerText = sec ? sec.title : "Selected Section";
+                }
+            }
+
+            if (fileCountInd) fileCountInd.innerText = `${filtered.length} Files`;
+
+            if (filtered.length === 0) {
+                grid.classList.add('hidden');
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+
+            const currentUserId = getUserIdentifier();
+
+            grid.innerHTML = filtered.map(file => {
+                const likedBy = file.likedBy || [];
+                const isLiked = likedBy.includes(currentUserId);
+                
+                let mediaPreviewHtml = '';
+                if (file.type === 'photo') {
+                    mediaPreviewHtml = `
+                        <img src="${escapeHtml(file.url)}" alt="${escapeHtml(file.title)}" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=Image+Not+Found'">
+                    `;
+                } else if (file.type === 'video') {
+                    mediaPreviewHtml = `
+                        <div class="w-full h-48 bg-slate-900 flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300">
+                            <video src="${escapeHtml(file.url)}" class="w-full h-full object-cover opacity-80" preload="metadata"></video>
+                            <div class="absolute w-12 h-12 rounded-full bg-blue-600/90 text-white flex items-center justify-center text-lg shadow-lg">
+                                <i class="fa-solid fa-play ml-0.5"></i>
+                            </div>
+                        </div>
+                    `;
+                } else if (file.type === 'audio') {
+                    mediaPreviewHtml = `
+                        <div class="w-full h-48 bg-gradient-to-br from-slate-900 to-indigo-950 flex flex-col items-center justify-center p-4 relative group-hover:scale-105 transition-transform duration-300">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-2 border border-amber-500/30">
+                                <i class="fa-solid fa-headphones"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-300 truncate max-w-full px-2">${escapeHtml(file.title)}</span>
+                        </div>
+                    `;
+                }
+
+                const typeBadgeColor = file.type === 'photo' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : (file.type === 'video' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300' : 'bg-amber-500/20 text-amber-600 dark:text-amber-300');
+
+                return `
+                    <div oncontextmenu="handleMediaContextMenu(event, '${file.id}')" onclick="openMediaModal('${file.id}')" 
+                         class="glass-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col border border-slate-200 dark:border-slate-800">
+                        <div class="relative overflow-hidden shrink-0">
+                            ${mediaPreviewHtml}
+                            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${typeBadgeColor} backdrop-blur-md shadow-sm">
+                                ${file.type}
+                            </span>
+                            
+                            <!-- Heart button turning red immediately when liked -->
+                            <button onclick="event.stopPropagation(); toggleLikeFile('${file.id}')" class="absolute top-3 right-3 p-2 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white backdrop-blur-md transition-all active:scale-95" title="Like / Heart File">
+                                <i class="fa-solid fa-heart ${isLiked ? 'text-rose-500' : 'text-slate-300'} text-xs"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-500 transition-colors">${escapeHtml(file.title)}</h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-user text-slate-400"></i>
+                                    <span>${escapeHtml(file.uploader || 'Anonymous')}</span>
+                                    ${file.creator && file.creator !== file.uploader ? `<span class="text-[9px] text-slate-400">(Original: ${escapeHtml(file.creator)})</span>` : ''}
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+                                <!-- Interactive heart status counter -->
+                                <button onclick="event.stopPropagation(); toggleLikeFile('${file.id}')" class="flex items-center gap-1.5 font-bold ${isLiked ? 'text-rose-500' : 'hover:text-rose-500'} transition-colors">
+                                    <i class="fa-solid fa-heart ${isLiked ? 'text-rose-500' : 'text-slate-400'}"></i>
+                                    <span>${file.likes || 0}</span>
+                                </button>
+
+                                <div class="flex items-center gap-2">
+                                    <button onclick="event.stopPropagation(); downloadMediaFile('${file.url}', '${file.title}')" class="p-1 hover:text-emerald-500" title="Direct Download">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* LIVE HEART TOGGLE FUNCTIONALITY */
+        async function toggleLikeFile(fileId) {
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const currentUserId = getUserIdentifier();
+            let likedBy = [...(file.likedBy || [])];
+            let likes = file.likes || 0;
+
+            const index = likedBy.indexOf(currentUserId);
+            let isLiked = false;
+
+            if (index > -1) {
+                likedBy.splice(index, 1);
+                likes = Math.max(0, likes - 1);
+                isLiked = false;
+            } else {
+                likedBy.push(currentUserId);
+                likes += 1;
+                isLiked = true;
+            }
+
+            // Immediately update local memory state for zero-latency UI update
+            file.likedBy = likedBy;
+            file.likes = likes;
+
+            // Instantly trigger re-render of grid and modal
+            renderMediaGrid();
+            if (window.appState.currentViewingMediaId === fileId) {
+                updateModalLikeButton();
+            }
+
+            try {
+                await window.updateFileInDb(fileId, {
+                    likes: likes,
+                    likedBy: likedBy
+                });
+            } catch (err) {
+                console.error("Error updating likes in DB", err);
+            }
+        }
+
+        function toggleLikeCurrentMedia() {
+            if (window.appState.currentViewingMediaId) {
+                toggleLikeFile(window.appState.currentViewingMediaId);
+            }
+        }
+
+        function updateModalLikeButton() {
+            const fileId = window.appState.currentViewingMediaId;
+            if (!fileId) return;
+
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const currentUserId = getUserIdentifier();
+            const likedBy = file.likedBy || [];
+            const isLiked = likedBy.includes(currentUserId);
+
+            const likeBtn = document.getElementById('modal-like-btn');
+            const likeIcon = document.getElementById('modal-like-icon');
+            const likeCount = document.getElementById('modal-like-count');
+
+            if (likeCount) likeCount.innerText = file.likes || 0;
+
+            if (isLiked) {
+                if (likeIcon) likeIcon.className = "fa-solid fa-heart text-rose-500 text-sm";
+                if (likeBtn) {
+                    likeBtn.className = "px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center gap-2 transition-all active:scale-95";
+                }
+            } else {
+                if (likeIcon) likeIcon.className = "fa-solid fa-heart text-slate-400 text-sm";
+                if (likeBtn) {
+                    likeBtn.className = "px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all active:scale-95";
+                }
+            }
+        }
+
+        function updateModalPinButtonState() {
+            const fileId = window.appState.currentViewingMediaId;
+            if (!fileId) return;
+
+            const isPinned = (window.appState.pinnedIds.files || []).includes(fileId);
+            const pinLabel = document.getElementById('modal-pin-label');
+            const pinIcon = document.getElementById('modal-pin-icon');
+
+            if (pinLabel) pinLabel.innerText = isPinned ? "Unpin Item" : "Pin Item";
+            if (pinIcon) pinIcon.className = isPinned ? "fa-solid fa-thumbtack text-amber-500" : "fa-solid fa-thumbtack";
+        }
+
+        function openMediaModal(fileId) {
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            window.appState.currentViewingMediaId = fileId;
+
+            document.getElementById('modal-title').innerText = file.title;
+            document.getElementById('modal-uploader').innerText = `Uploaded by ${file.uploader || 'Anonymous'}`;
+            document.getElementById('modal-date').innerText = new Date(file.createdAt || Date.now()).toLocaleDateString();
+
+            const badge = document.getElementById('modal-type-badge');
+            if (badge) {
+                badge.innerText = file.type;
+                badge.className = `px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${file.type === 'photo' ? 'bg-emerald-500/20 text-emerald-600' : (file.type === 'video' ? 'bg-purple-500/20 text-purple-600' : 'bg-amber-500/20 text-amber-600')}`;
+            }
+
+            const player = document.getElementById('modal-player-container');
+            if (file.type === 'photo') {
+                player.innerHTML = `<img src="${escapeHtml(file.url)}" class="max-h-full max-w-full object-contain rounded-xl shadow-lg">`;
+            } else if (file.type === 'video') {
+                player.innerHTML = `<video src="${escapeHtml(file.url)}" controls autoplay class="max-h-full max-w-full rounded-xl shadow-lg"></video>`;
+            } else if (file.type === 'audio') {
+                player.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-6 w-full max-w-md">
+                        <div class="w-20 h-20 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-3xl mb-4 border border-amber-500/30 shadow-lg animate-pulse">
+                            <i class="fa-solid fa-headphones"></i>
+                        </div>
+                        <h4 class="font-bold text-white text-base mb-4 truncate max-w-full">${escapeHtml(file.title)}</h4>
+                        <audio src="${escapeHtml(file.url)}" controls autoplay class="w-full"></audio>
+                    </div>
+                `;
+            }
+
+            const currentUser = window.appState.loggedInUser?.username;
+            const isOwner = currentUser && file.uploader === currentUser;
+            
+            const deleteBtn = document.getElementById('modal-delete-btn');
+            const copyBtn = document.getElementById('modal-copy-btn');
+            const copyNotice = document.getElementById('copy-disabled-notice');
+
+            if (deleteBtn) {
+                if (isOwner) deleteBtn.classList.remove('hidden');
+                else deleteBtn.classList.add('hidden');
+            }
+
+            const allowCopy = canCopyMedia(file);
+            if (allowCopy) {
+                if (copyBtn) copyBtn.classList.remove('hidden');
+                if (copyNotice) copyNotice.classList.add('hidden');
+            } else {
+                if (copyBtn) copyBtn.classList.add('hidden');
+                if (copyNotice) copyNotice.classList.remove('hidden');
+            }
+
+            const tagsContainer = document.getElementById('modal-tags');
+            if (tagsContainer) {
+                tagsContainer.innerHTML = (file.tags || []).map(t => `
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                        #${escapeHtml(t)}
+                    </span>
+                `).join('');
+            }
+
+            updateModalLikeButton();
+            updateModalPinButtonState();
+
+            document.getElementById('reorganize-panel').classList.add('hidden');
+            document.getElementById('media-modal').classList.remove('hidden');
+        }
+
+        function closeMediaModal() {
+            window.appState.currentViewingMediaId = null;
+            const player = document.getElementById('modal-player-container');
+            if (player) player.innerHTML = '';
+            document.getElementById('media-modal').classList.add('hidden');
+        }
+
+        function togglePinCurrentMedia() {
+            if (window.appState.currentViewingMediaId) {
+                togglePinFile(window.appState.currentViewingMediaId);
+            }
+        }
+
+        function triggerCurrentMediaDownload() {
+            if (!window.appState.currentViewingMediaId) return;
+            const file = window.appState.files.find(f => f.id === window.appState.currentViewingMediaId);
+            if (file) {
+                downloadMediaFile(file.url, file.title);
+            }
+        }
+
+        function downloadMediaFile(url, fileName) {
+            if (!url) return;
+            showToast("Downloading", `Downloading ${fileName}...`, "info");
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName || 'download';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function confirmDeleteCurrentMedia() {
+            const fileId = window.appState.currentViewingMediaId;
+            if (!fileId) return;
+
+            if (confirm("Are you sure you want to delete this media file?")) {
+                try {
+                    await window.deleteFileFromDb(fileId);
+                    showToast("Deleted", "Media file removed.", "info");
+                    closeMediaModal();
+                } catch (err) {
+                    showToast("Error", "Failed to delete file.", "error");
+                }
+            }
+        }
+
+        function openReorganizeSelect() {
+            const panel = document.getElementById('reorganize-panel');
+            const container = document.getElementById('modal-sections-checkboxes');
+            const fileId = window.appState.currentViewingMediaId;
+            const file = window.appState.files.find(f => f.id === fileId);
+
+            if (!panel || !container || !file) return;
+
+            const currentUser = window.appState.loggedInUser?.username;
+            const availableSecs = window.appState.sections.filter(s => s.type === 'community' || s.creator === currentUser);
+
+            const fileSecIds = file.sectionIds || (file.sectionId ? [file.sectionId] : []);
+
+            container.innerHTML = availableSecs.map(sec => `
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-xs">
+                    <input type="checkbox" name="reorganize-sec" value="${sec.id}" class="rounded text-blue-600 focus:ring-0" ${fileSecIds.includes(sec.id) ? 'checked' : ''}>
+                    <span class="w-2 h-2 rounded-full" style="background-color: ${sec.color || '#3b82f6'}"></span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(sec.title)}</span>
+                </label>
+            `).join('');
+
+            panel.classList.toggle('hidden');
+        }
+
+        async function confirmSectionMove() {
+            const fileId = window.appState.currentViewingMediaId;
+            if (!fileId) return;
+
+            const checkboxes = document.querySelectorAll('input[name="reorganize-sec"]:checked');
+            const newSecIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (newSecIds.length === 0) {
+                showToast("Section Required", "Please select at least one section.", "error");
+                return;
+            }
+
+            try {
+                await window.updateFileInDb(fileId, {
+                    sectionIds: newSecIds
+                });
+                showToast("Sections Updated", "Media reassigned successfully.", "success");
+                document.getElementById('reorganize-panel').classList.add('hidden');
+            } catch (err) {
+                showToast("Error", "Could not update file sections.", "error");
+            }
+        }
+
+        function openCopyModal() {
+            const fileId = window.appState.currentViewingMediaId;
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            document.getElementById('copy-item-title').value = `${file.title} (Copy)`;
+            document.getElementById('copy-original-credit-name').innerText = file.creator || file.uploader || 'Anonymous';
+
+            const container = document.getElementById('copy-sections-checkboxes');
+            const currentUser = window.appState.loggedInUser?.username;
+            const availableSecs = window.appState.sections.filter(s => s.type === 'community' || s.creator === currentUser);
+
+            container.innerHTML = availableSecs.map(sec => `
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer text-xs">
+                    <input type="checkbox" name="copy-sec" value="${sec.id}" class="rounded text-emerald-600 focus:ring-0">
+                    <span class="w-2 h-2 rounded-full" style="background-color: ${sec.color || '#3b82f6'}"></span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(sec.title)}</span>
+                </label>
+            `).join('');
+
+            document.getElementById('copy-modal').classList.remove('hidden');
+        }
+
+        function closeCopyModal() {
+            document.getElementById('copy-modal').classList.add('hidden');
+        }
+
+        async function handleCopySubmit(e) {
+            e.preventDefault();
+
+            const fileId = window.appState.currentViewingMediaId;
+            const file = window.appState.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const newTitle = document.getElementById('copy-item-title').value.trim();
+            const checkboxes = document.querySelectorAll('input[name="copy-sec"]:checked');
+            const targetSecIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (!newTitle) {
+                showToast("Missing Title", "Please provide a title for the copy.", "error");
+                return;
+            }
+
+            if (targetSecIds.length === 0) {
+                showToast("Select Section", "Please select target section(s).", "error");
+                return;
+            }
+
+            const currentUser = window.appState.loggedInUser?.username || "Anonymous";
+
+            const copyFile = {
+                title: newTitle,
+                type: file.type,
+                url: file.url,
+                sectionIds: targetSecIds,
+                tags: file.tags || [],
+                uploader: currentUser,
+                creator: file.creator || file.uploader || "Anonymous",
+                createdAt: Date.now(),
+                likes: 0,
+                likedBy: []
+            };
+
+            try {
+                await window.saveFileToDb(copyFile);
+                showToast("Copied Successfully", `Item copied into target sections with creator credit preserved.`, "success");
+                closeCopyModal();
+            } catch (err) {
+                showToast("Error", "Could not copy item.", "error");
+            }
+        }
+
+        function toggleTheme() {
+            window.appState.theme = window.appState.theme === 'light' ? 'dark' : 'light';
+            applyTheme();
+        }
+
+        function applyTheme() {
+            const html = document.getElementById('app-html');
+            const icon = document.getElementById('theme-icon');
+
+            if (window.appState.theme === 'dark') {
+                html.classList.add('dark');
+                if (icon) icon.className = "fa-solid fa-sun text-amber-400";
+            } else {
+                html.classList.remove('dark');
+                if (icon) icon.className = "fa-solid fa-moon text-slate-600";
+            }
+        }
+    </script>
+</body>
+</html>
